@@ -25,19 +25,25 @@ def check_python_version():
 # Check Python version before importing anything else
 check_python_version()
 
-# Set environment variables for better compatibility
+# Set environment variables for HF Spaces compatibility
 os.environ['TORCH_HOME'] = '/tmp/torch'
 os.environ['HF_HOME'] = '/tmp/huggingface'
 os.environ['TRANSFORMERS_CACHE'] = '/tmp/transformers'
 os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Force CPU-only mode
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'  # Avoid tokenizer warnings
+os.environ['OMP_NUM_THREADS'] = '1'  # Limit CPU threads for stability
 
-# Fix for various warnings in containers
+# Comprehensive warning suppression for cleaner output
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message=".*torch.utils._pytree._register_pytree_node.*")
+warnings.filterwarnings("ignore", message=".*The parameter 'pretrained' is deprecated.*")
 
-# Add the gradio_demo directory to the Python path
+# Add paths for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'gradio_demo'))
+sys.path.insert(0, os.path.dirname(__file__))
 
 # Import and run the main application
 if __name__ == "__main__":

@@ -1,1 +1,15 @@
+# System packages for IDM-VTON on Hugging Face Spaces
+# Keep minimal to avoid conflicts
 
+# Essential system libraries
+libglib2.0-0
+libsm6
+libxext6
+libxrender-dev
+libgomp1
+
+# For OpenCV (headless version doesn't need X11)
+libglib2.0-0
+
+# For MediaPipe and pose estimation
+libgoogle-glog0v5

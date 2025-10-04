@@ -1,18 +1,24 @@
-# Core ML packages - compatible versions for Hugging Face Spaces
+# IDM-VTON Requirements for Hugging Face Spaces
+# Optimized for CPU-only containerized environment
+
+# Core ML packages - HF Spaces compatible versions
 transformers==4.30.0
 diffusers==0.21.4
 huggingface_hub==0.16.4
 accelerate==0.20.3
-torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.2
+
+# PyTorch CPU-only (no CUDA to avoid executable stack issues)
+torch==2.0.1+cpu
+torchvision==0.15.2+cpu
+torchaudio==2.0.2+cpu
+--find-links https://download.pytorch.org/whl/torch_stable.html
 
 # Computer vision and image processing
 opencv-python-headless==4.8.1.78
 Pillow==9.5.0
 scikit-image==0.21.0
 
-# Gradio and web interface - compatible with HF Spaces
+# Gradio web interface
 gradio==3.50.2
 
 # Data science and utilities
@@ -20,15 +26,21 @@ numpy==1.24.3
 scipy==1.11.1
 pandas==2.0.3
 
-# Additional ML utilities
+# Additional ML utilities (lightweight versions)
 fvcore==0.1.5.post20221221
 cloudpickle==2.2.1
 omegaconf==2.3.0
 pycocotools==2.0.7
-# onnxruntime==1.15.1  # Removed due to executable stack issues in containers
 einops==0.6.1
-# detectron2 removed - replaced with simple CV functions
-# xformers removed - optional for this deployment
+
+# Image processing utilities
+controlnet-aux==0.0.6
+mediapipe==0.10.3
+
+# Removed problematic packages:
+# - onnxruntime: causes executable stack issues in containers
+# - detectron2: replaced with compatibility layer
+# - xformers: optional, causes installation issues
 
 # System packages (install via conda)
 # conda install -c conda-forge av

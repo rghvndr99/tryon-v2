@@ -1,22 +1,40 @@
 import sys
-sys.path.append('./')
+import os
+import warnings
 
-# Check Python version first
-def check_python_version():
-    """Check if Python 3.10 is being used"""
+# Comprehensive Hugging Face Spaces compatibility setup
+def setup_hf_spaces_environment():
+    """Setup environment for Hugging Face Spaces compatibility"""
+    print("🔧 Setting up environment for Hugging Face Spaces...")
+
+    # Check Python version
     version = sys.version_info
     if version.major != 3 or version.minor != 10:
         print("❌ ERROR: This application requires Python 3.10")
         print(f"   Current version: Python {version.major}.{version.minor}.{version.micro}")
-        print("\n📋 To fix this:")
-        print("   1. Install Python 3.10 from https://www.python.org/downloads/")
-        print("   2. Or use pyenv: pyenv install 3.10.12 && pyenv local 3.10.12")
-        print("   3. Or use conda: conda create -n idm python=3.10 && conda activate idm")
         sys.exit(1)
     print(f"✅ Python 3.10 detected: {version.major}.{version.minor}.{version.micro}")
 
-# Run version check
-check_python_version()
+    # Set environment variables for HF Spaces
+    os.environ['TORCH_HOME'] = '/tmp/torch'
+    os.environ['HF_HOME'] = '/tmp/huggingface'
+    os.environ['TRANSFORMERS_CACHE'] = '/tmp/transformers'
+    os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Force CPU-only mode
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'  # Avoid tokenizer warnings
+
+    # Suppress warnings for cleaner output
+    warnings.filterwarnings("ignore", category=UserWarning)
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    # Add paths
+    sys.path.append('./')
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+    print("✅ Environment setup complete")
+
+# Run setup
+setup_hf_spaces_environment()
 
 from PIL import Image
 import gradio as gr
@@ -39,8 +57,8 @@ import numpy as np
 from utils_mask import get_mask_location
 from torchvision import transforms
 import apply_net
-from preprocess.humanparsing.run_parsing import Parsing
-from preprocess.openpose.run_openpose import OpenPose
+# Use preprocessing compatibility layer for HF Spaces
+from preprocessing_compat import Parsing, OpenPose
 # Use compatibility layer for detectron2
 from detectron2_compat import convert_PIL_to_numpy, _apply_exif_orientation
 import cv2
@@ -65,89 +83,157 @@ def pil_to_binary_mask(pil_image, threshold=0):
 base_path = 'yisol/IDM-VTON'
 example_path = os.path.join(os.path.dirname(__file__), 'example')
 
-unet = UNet2DConditionModel.from_pretrained(
-    base_path,
-    subfolder="unet",
-    torch_dtype=torch.float16,
-)
-unet.requires_grad_(False)
-tokenizer_one = AutoTokenizer.from_pretrained(
-    base_path,
-    subfolder="tokenizer",
-    revision=None,
-    use_fast=False,
-)
-tokenizer_two = AutoTokenizer.from_pretrained(
-    base_path,
-    subfolder="tokenizer_2",
-    revision=None,
-    use_fast=False,
-)
-noise_scheduler = DDPMScheduler.from_pretrained(base_path, subfolder="scheduler")
+def load_models_safely():
+    """Load models with proper error handling for HF Spaces"""
+    print("📦 Loading IDM-VTON models...")
 
-text_encoder_one = CLIPTextModel.from_pretrained(
-    base_path,
-    subfolder="text_encoder",
-    torch_dtype=torch.float16,
-)
-text_encoder_two = CLIPTextModelWithProjection.from_pretrained(
-    base_path,
-    subfolder="text_encoder_2",
-    torch_dtype=torch.float16,
-)
-image_encoder = CLIPVisionModelWithProjection.from_pretrained(
-    base_path,
-    subfolder="image_encoder",
-    torch_dtype=torch.float16,
-    )
-vae = AutoencoderKL.from_pretrained(base_path,
-                                    subfolder="vae",
-                                    torch_dtype=torch.float16,
-)
+    # Determine device and dtype for HF Spaces (CPU-only)
+    device = "cpu"
+    dtype = torch.float32  # Use float32 for CPU compatibility
 
-# "stabilityai/stable-diffusion-xl-base-1.0",
-UNet_Encoder = UNet2DConditionModel_ref.from_pretrained(
-    base_path,
-    subfolder="unet_encoder",
-    torch_dtype=torch.float16,
-)
+    try:
+        print("🔄 Loading UNet...")
+        unet = UNet2DConditionModel.from_pretrained(
+            base_path,
+            subfolder="unet",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        unet.requires_grad_(False)
+        print("✅ UNet loaded successfully")
 
-parsing_model = Parsing(0)
-openpose_model = OpenPose(0)
+        print("🔄 Loading tokenizers...")
+        tokenizer_one = AutoTokenizer.from_pretrained(
+            base_path,
+            subfolder="tokenizer",
+            revision=None,
+            use_fast=False,
+        )
+        tokenizer_two = AutoTokenizer.from_pretrained(
+            base_path,
+            subfolder="tokenizer_2",
+            revision=None,
+            use_fast=False,
+        )
+        print("✅ Tokenizers loaded successfully")
 
-UNet_Encoder.requires_grad_(False)
-image_encoder.requires_grad_(False)
-vae.requires_grad_(False)
-unet.requires_grad_(False)
-text_encoder_one.requires_grad_(False)
-text_encoder_two.requires_grad_(False)
-tensor_transfrom = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize([0.5], [0.5]),
-            ]
-    )
+        print("🔄 Loading scheduler...")
+        noise_scheduler = DDPMScheduler.from_pretrained(base_path, subfolder="scheduler")
+        print("✅ Scheduler loaded successfully")
 
+        print("🔄 Loading text encoders...")
+        text_encoder_one = CLIPTextModel.from_pretrained(
+            base_path,
+            subfolder="text_encoder",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        text_encoder_two = CLIPTextModelWithProjection.from_pretrained(
+            base_path,
+            subfolder="text_encoder_2",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        print("✅ Text encoders loaded successfully")
+
+        print("🔄 Loading image encoder...")
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        print("✅ Image encoder loaded successfully")
+
+        print("🔄 Loading VAE...")
+        vae = AutoencoderKL.from_pretrained(
+            base_path,
+            subfolder="vae",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        print("✅ VAE loaded successfully")
+
+        print("🔄 Loading UNet Encoder...")
+        UNet_Encoder = UNet2DConditionModel_ref.from_pretrained(
+            base_path,
+            subfolder="unet_encoder",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+        )
+        print("✅ UNet Encoder loaded successfully")
+
+        print("🔄 Loading preprocessing models...")
+        parsing_model = Parsing(0)
+        openpose_model = OpenPose(0)
+        print("✅ Preprocessing models loaded successfully")
+
+        # Set models to eval mode and disable gradients
+        UNet_Encoder.requires_grad_(False)
+        image_encoder.requires_grad_(False)
+        vae.requires_grad_(False)
+        unet.requires_grad_(False)
+        text_encoder_one.requires_grad_(False)
+        text_encoder_two.requires_grad_(False)
+
+        return (unet, tokenizer_one, tokenizer_two, noise_scheduler,
+                text_encoder_one, text_encoder_two, image_encoder, vae,
+                UNet_Encoder, parsing_model, openpose_model)
+
+    except Exception as e:
+        print(f"❌ Error loading models: {e}")
+        print("🔄 This might be due to missing model files or network issues")
+        print("💡 In HF Spaces, models are downloaded automatically on first run")
+        raise e
+
+# Load all models
+(unet, tokenizer_one, tokenizer_two, noise_scheduler,
+ text_encoder_one, text_encoder_two, image_encoder, vae,
+ UNet_Encoder, parsing_model, openpose_model) = load_models_safely()
+# Setup transforms and pipeline
+tensor_transfrom = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.5], [0.5]),
+])
+
+print("🔄 Creating try-on pipeline...")
 pipe = TryonPipeline.from_pretrained(
-        base_path,
-        unet=unet,
-        vae=vae,
-        feature_extractor= CLIPImageProcessor(),
-        text_encoder = text_encoder_one,
-        text_encoder_2 = text_encoder_two,
-        tokenizer = tokenizer_one,
-        tokenizer_2 = tokenizer_two,
-        scheduler = noise_scheduler,
-        image_encoder=image_encoder,
-        torch_dtype=torch.float16,
+    base_path,
+    unet=unet,
+    vae=vae,
+    feature_extractor=CLIPImageProcessor(),
+    text_encoder=text_encoder_one,
+    text_encoder_2=text_encoder_two,
+    tokenizer=tokenizer_one,
+    tokenizer_2=tokenizer_two,
+    scheduler=noise_scheduler,
+    image_encoder=image_encoder,
+    torch_dtype=torch.float32,  # Use float32 for CPU compatibility
 )
 pipe.unet_encoder = UNet_Encoder
 
-def start_tryon(dict,garm_img,garment_des,is_checked,is_checked_crop,denoise_steps,seed):
-    
-    openpose_model.preprocessor.body_estimation.model.to(device)
+# Set device for HF Spaces (CPU-only)
+device = "cpu"
+print(f"🖥️  Device: {device}")
+
+# Move models to device
+print("🔄 Moving models to device...")
+try:
     pipe.to(device)
     pipe.unet_encoder.to(device)
+    print("✅ Models moved to device successfully")
+except Exception as e:
+    print(f"⚠️  Warning: Could not move all models to device: {e}")
+
+print("✅ IDM-VTON pipeline ready!")
+
+def start_tryon(dict, garm_img, garment_des, is_checked, is_checked_crop, denoise_steps, seed):
+    """Main try-on function with comprehensive error handling"""
+    try:
+        print("🔄 Starting virtual try-on process...")
+
+        # Ensure models are on correct device
+        if hasattr(openpose_model, 'preprocessor') and hasattr(openpose_model.preprocessor, 'body_estimation'):
+            openpose_model.preprocessor.body_estimation.model.to(device)
+
+        # Models should already be on device from initialization
 
     garm_img= garm_img.convert("RGB").resize((768,1024))
     human_img_orig = dict["background"].convert("RGB")    
