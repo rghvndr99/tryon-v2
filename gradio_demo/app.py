@@ -327,5 +327,10 @@ with image_blocks as demo:
             
 
 
-image_blocks.launch()
+# Export the demo object for use by other scripts
+demo = image_blocks
+
+# Only launch if this script is run directly
+if __name__ == "__main__":
+    image_blocks.launch()
 
