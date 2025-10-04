@@ -1,0 +1,31 @@
+# Core ML packages - exact working versions
+transformers==4.25.1
+diffusers==0.21.4
+huggingface_hub==0.16.4
+accelerate==0.20.3
+torch==1.12.1
+torchvision==0.13.1
+torchaudio==0.12.1
+
+# Computer vision and image processing
+opencv-python==4.8.1.78
+Pillow==9.5.0
+scikit-image==0.21.0
+
+# Gradio and web interface
+gradio==3.50.2
+
+# Data science and utilities
+numpy==1.24.3
+scipy==1.11.1
+pandas==2.0.3
+
+# Additional ML utilities
+fvcore==0.1.5.post20221221
+cloudpickle==2.2.1
+omegaconf==2.3.0
+pycocotools==2.0.7
+onnxruntime==1.15.1
+
+# System packages (install via conda)
+# conda install -c conda-forge av
