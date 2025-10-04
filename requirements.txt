@@ -3,10 +3,9 @@ transformers==4.25.1
 diffusers==0.21.4
 huggingface_hub==0.16.4
 accelerate==0.20.3
-torch==1.13.1+cpu
-torchvision==0.14.1+cpu
-torchaudio==0.13.1+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.2
 
 # Computer vision and image processing
 opencv-python==4.8.1.78

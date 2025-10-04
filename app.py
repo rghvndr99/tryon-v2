@@ -25,14 +25,16 @@ def check_python_version():
 # Check Python version before importing anything else
 check_python_version()
 
-# Set environment variables for PyTorch compatibility
+# Set environment variables for better compatibility
 os.environ['TORCH_HOME'] = '/tmp/torch'
 os.environ['HF_HOME'] = '/tmp/huggingface'
 os.environ['TRANSFORMERS_CACHE'] = '/tmp/transformers'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''  # Force CPU-only mode
 
-# Fix for PyTorch CPU library issues in containers
+# Fix for various warnings in containers
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Add the gradio_demo directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'gradio_demo'))
