@@ -41,34 +41,10 @@ from torchvision import transforms
 import apply_net
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
-# Replaced detectron2 imports with simpler alternatives
+# Use compatibility layer for detectron2
+from detectron2_compat import convert_PIL_to_numpy, _apply_exif_orientation
 import cv2
 from torchvision.transforms.functional import to_pil_image
-
-# Simple replacements for detectron2 functions
-def convert_PIL_to_numpy(image, format="BGR"):
-    """Convert PIL image to numpy array"""
-    img_array = np.array(image)
-    if format == "BGR" and len(img_array.shape) == 3:
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-    return img_array
-
-def _apply_exif_orientation(image):
-    """Apply EXIF orientation to PIL image"""
-    try:
-        from PIL.ExifTags import ORIENTATION
-        exif = image._getexif()
-        if exif is not None:
-            orientation = exif.get(ORIENTATION)
-            if orientation == 3:
-                image = image.rotate(180, expand=True)
-            elif orientation == 6:
-                image = image.rotate(270, expand=True)
-            elif orientation == 8:
-                image = image.rotate(90, expand=True)
-    except:
-        pass  # If EXIF processing fails, just return original image
-    return image
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 

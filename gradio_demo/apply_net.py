@@ -9,37 +9,21 @@ import sys
 from typing import Any, ClassVar, Dict, List
 import torch
 
-from detectron2.config import CfgNode, get_cfg
-from detectron2.data.detection_utils import read_image
-from detectron2.engine.defaults import DefaultPredictor
-from detectron2.structures.instances import Instances
-from detectron2.utils.logger import setup_logger
+from detectron2_compat import (
+    CfgNode, get_cfg, read_image, DefaultPredictor,
+    Instances, setup_logger, DETECTRON2_AVAILABLE
+)
 
-from densepose import add_densepose_config
-from densepose.structures import DensePoseChartPredictorOutput, DensePoseEmbeddingPredictorOutput
-from densepose.utils.logger import verbosity_to_level
-from densepose.vis.base import CompoundVisualizer
-from densepose.vis.bounding_box import ScoredBoundingBoxVisualizer
-from densepose.vis.densepose_outputs_vertex import (
-    DensePoseOutputsTextureVisualizer,
-    DensePoseOutputsVertexVisualizer,
-    get_texture_atlases,
-)
-from densepose.vis.densepose_results import (
-    DensePoseResultsContourVisualizer,
-    DensePoseResultsFineSegmentationVisualizer,
-    DensePoseResultsUVisualizer,
-    DensePoseResultsVVisualizer,
-)
-from densepose.vis.densepose_results_textures import (
-    DensePoseResultsVisualizerWithTexture,
-    get_texture_atlas,
-)
-from densepose.vis.extractor import (
-    CompoundExtractor,
-    DensePoseOutputsExtractor,
-    DensePoseResultExtractor,
-    create_extractor,
+from detectron2_compat import (
+    add_densepose_config, DensePoseChartPredictorOutput, DensePoseEmbeddingPredictorOutput,
+    verbosity_to_level, CompoundVisualizer, ScoredBoundingBoxVisualizer,
+    DensePoseOutputsTextureVisualizer, DensePoseOutputsVertexVisualizer,
+    get_texture_atlas, get_texture_atlases,
+    DensePoseResultsContourVisualizer, DensePoseResultsFineSegmentationVisualizer,
+    DensePoseResultsUVisualizer, DensePoseResultsVVisualizer,
+    DensePoseResultsVisualizerWithTexture, get_texture_atlases_dict,
+    CompoundExtractor, DensePoseOutputsExtractor, DensePoseResultExtractor, create_extractor,
+    DENSEPOSE_AVAILABLE
 )
 
 DOC = """Apply Net - a tool to print / visualize DensePose results
