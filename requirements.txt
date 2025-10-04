@@ -26,6 +26,9 @@ cloudpickle==2.2.1
 omegaconf==2.3.0
 pycocotools==2.0.7
 onnxruntime==1.15.1
+einops==0.6.1
+detectron2==0.6
+xformers==0.0.20
 
 # System packages (install via conda)
 # conda install -c conda-forge av
