@@ -119,6 +119,17 @@ def refine_hole(parsing_result_filled, parsing_result, arm_mask):
     return refine_hole_mask + arm_mask
 
 def onnx_inference(session, lip_session, input_dir):
+    # Check if we're using mock sessions (fallback mode)
+    if hasattr(session, '__class__') and 'Mock' in session.__class__.__name__:
+        print("⚠️  Using fallback human parsing - returning dummy results")
+        # Return dummy parsing results
+        dummy_parsing = np.zeros((512, 384), dtype=np.uint8)
+        dummy_face_mask = torch.zeros((512, 384), dtype=torch.float32)
+        palette = get_palette(19)
+        output_img = Image.fromarray(dummy_parsing)
+        output_img.putpalette(palette)
+        return output_img, dummy_face_mask
+
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.406, 0.456, 0.485], std=[0.225, 0.224, 0.229])
