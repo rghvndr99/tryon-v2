@@ -8,7 +8,7 @@ torchvision==0.15.2
 torchaudio==2.0.2
 
 # Computer vision and image processing
-opencv-python==4.8.1.78
+opencv-python-headless==4.8.1.78
 Pillow==9.5.0
 scikit-image==0.21.0
 
